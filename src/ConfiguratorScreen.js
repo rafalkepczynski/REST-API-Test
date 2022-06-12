@@ -5,7 +5,7 @@ import {Link} from "react-router-dom";
 import AuthService from "./services/auth.service";
 import PwdChgScreen from "./PwdChgScreen";
 
-class ManagerScreen extends Component {
+class ConfiguratorScreen extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -62,4 +62,4 @@ class ManagerScreen extends Component {
     }
 }
 
-export default ManagerScreen;
+export default ConfiguratorScreen;

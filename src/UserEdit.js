@@ -1,20 +1,20 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Container, Form, FormGroup, Input, Label } from 'reactstrap';
-import AppNavbar from '../AppNavbar';
+import AppNavbar from './AppNavbar';
 import axios from "axios";
-import authHeader from "../services/auth-header";
+import authHeader from "./services/auth-header";
+
+const API_URL = "https://localhost:7290/api/Account/";
 
 class UserEdit extends Component {
 
     emptyItem = {
         id: '',
-        username: '',
-        email: '',
-        password: '',
-        role: '',
         name: '',
-        surname: ''
+        login: '',
+        password: '',
+        roleId: ''
     };
 
     lastURLSegment = window.location.href.substr(window.location.href.lastIndexOf('/') + 1);
@@ -31,8 +31,10 @@ class UserEdit extends Component {
 
     componentDidMount() {
         if (this.lastURLSegment !== 'new') {
-            axios.get('http://localhost:8080/api/auth/users/edit/' + this.props.match.params.id, { headers: authHeader() })
-                .then(response => this.setState({item: response.data}));
+            axios.get(API_URL + "getusers", { headers: authHeader() })
+                .then(response =>{
+                    let index = response.data.findIndex(x => x.id === Number(this.lastURLSegment));
+                    this.setState({item: response.data[index]})});
         }
         this.setState({
             roleEnum: [
@@ -41,15 +43,15 @@ class UserEdit extends Component {
                     display: "(Wybierz rolę)"
                 },
                 {
-                    value: "ROLE_USER",
+                    value: 3,
                     display: "Tester"
                 },
                 {
-                    value: "ROLE_MANAGER",
+                    value: 2,
                     display: "Konfigurator"
                 },
                 {
-                    value: "ROLE_ADMIN",
+                    value: 1,
                     display: "Administrator"
                 }
             ]
@@ -68,15 +70,24 @@ class UserEdit extends Component {
     async handleSubmit(event) {
         event.preventDefault();
         const {item} = this.state;
-        await fetch((item.id) ? 'http://localhost:8080/api/auth/users/' + item.id + '?username=' + item.username + '&email=' + item.email + '&role=' + item.role + '&name=' + item.name + '&surname=' + item.surname : 'http://localhost:8080/api/auth/signup', {
-            method: (item.id) ? 'PUT' : 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + JSON.parse(localStorage.getItem('user')).accessToken
-            },
-            body: JSON.stringify(item),
-        });
+        if (item.id) {
+            await axios.patch(API_URL + "edituser/" + this.lastURLSegment, {
+               name: item.name,
+               login: item.login
+            }, {headers: authHeader()});
+            await axios.patch(API_URL + "changerole/" + this.lastURLSegment, {
+                roleId: item.roleId
+            }, {headers: authHeader()});
+        }
+        else {
+            await axios.post(API_URL + "create", {
+                name: item.name,
+                login: item.login,
+                password: item.password,
+                confirmPassword: item.password,
+                roleId: item.roleId
+            }, { headers: authHeader() });
+        }
         this.props.history.push('/users/' + this.state.item.id);
     }
 
@@ -90,18 +101,18 @@ class UserEdit extends Component {
                 {title}
                 <Form onSubmit={this.handleSubmit}>
                     <FormGroup>
-                        <Label for="username">Nazwa użytkownika</Label>
-                        <Input type="text" name="username" id="username" value={item.username || ''}
-                               onChange={this.handleChange} autoComplete="username"/>
+                        <Label for="name">Nazwa użytkownika</Label>
+                        <Input type="text" name="name" id="name" value={item.name || ''}
+                               onChange={this.handleChange} autoComplete="name"/>
                     </FormGroup>
                     <FormGroup>
-                        <Label for="email">E-mail</Label>
-                        <Input type="text" name="email" id="email" value={item.email || ''}
-                               onChange={this.handleChange} autoComplete="email"/>
+                        <Label for="login">Login</Label>
+                        <Input type="text" name="login" id="login" value={item.login || ''}
+                               onChange={this.handleChange} autoComplete="login"/>
                     </FormGroup>
                     <FormGroup>
-                        <Label for="role">Rola</Label>
-                        <Input type="select" name="role" id="role" value={item.role || ''}
+                        <Label for="roleId">Rola</Label>
+                        <Input type="select" name="roleId" id="roleId" value={item.roleId || ''}
                                onChange={this.handleChange}>
                             {roleEnum.map(role => (
                                 <option
@@ -113,16 +124,6 @@ class UserEdit extends Component {
                             ))}
                         </Input>
                     </FormGroup>
-                    <FormGroup>
-                        <Label for="name">Imię</Label>
-                        <Input type="text" name="name" id="name" value={item.name || ''}
-                               onChange={this.handleChange} autoComplete="name"/>
-                    </FormGroup>
-                    <FormGroup>
-                        <Label for="surname">Nazwisko</Label>
-                        <Input type="text" name="surname" id="surname" value={item.surname || ''}
-                               onChange={this.handleChange} autoComplete="surname"/>
-                    </FormGroup>
                     {(!item.id) &&
                         <FormGroup>
                             <Label for="password">Hasło</Label>
@@ -131,7 +132,7 @@ class UserEdit extends Component {
                         </FormGroup>}
                     <FormGroup>
                         <Button color="primary" type="submit">Zapisz</Button>{' '}
-                        <Button color="secondary" tag={Link} to={(item.id) ? '/users/' + this.props.match.params.id : '/users/'}>Anuluj</Button>
+                        <Button color="secondary" tag={Link} to={'/users/'}>Anuluj</Button>
                     </FormGroup>
                 </Form>
             </Container>

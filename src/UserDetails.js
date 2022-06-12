@@ -10,77 +10,42 @@ import {
     CardTitle,
     Container
 } from 'reactstrap';
-import AppNavbar from '../AppNavbar';
+import AppNavbar from './AppNavbar';
 import axios from "axios";
-import authHeader from "../services/auth-header";
-import UsersCarList from "../cars/UsersCarList"
+import authHeader from "./services/auth-header";
+
+const API_URL = "https://localhost:7290/api/Account/";
 
 class UserDetails extends Component {
 
     emptyItem = {
         id: '',
-        username: '',
-        email: '',
+        name: '',
+        login: '',
         password: '',
-        roles: [
-            {
-                id: '',
-                name: ''
-            }
-        ],
-        userData: {
-            id: '',
-            name: '',
-            surname: ''
-        },
-        blocked: ''
+        roleId: ''
     };
-
-    lastURLSegment = window.location.href.substr(window.location.href.lastIndexOf('/') + 1);
 
     constructor(props) {
         super(props);
         this.state = {
             item: this.emptyItem,
-            showHideCarList: true,
-            isLoading: true,
-            blocked: true
+            isLoading: true
         };
         this.remove = this.remove.bind(this);
-        this.block = this.block.bind(this);
-        this.showHideCarList = this.showHideCarList.bind(this);
     }
 
     async componentDidMount() {
         this.setState({isLoading: true});
-        await axios.get('http://localhost:8080/api/auth/users/' + this.props.match.params.id, { headers: authHeader() })
-            .then(response => this.setState({item: response.data, isLoading: false}));
-
-        this.setState({blocked: this.state.item.blocked});
+        await axios.get(API_URL + "getusers", { headers: authHeader() })
+            .then(response => this.setState({item: response.data[this.props.match.params.id - 1], isLoading: false}));
     }
 
     async remove() {
-        axios.delete('http://localhost:8080/api/auth/users/' + this.props.match.params.id, { headers: authHeader() })
+        axios.delete(API_URL + "delete/" + this.props.match.params.id, { headers: authHeader() })
             .then(() => {
                 this.props.history.push('/users');
             });
-    }
-    async block() {
-        axios.put('http://localhost:8080/api/auth/block/' + this.props.match.params.id, { headers: authHeader() })
-            .then(() => {
-                this.componentDidMount();
-            });
-    }
-
-    showHideCarList() {
-        this.setState(state => ({
-            showHideCarList: !state.showHideCarList
-        }));
-    }
-
-    getCurrentState() {
-        if (this.state.blocked) return "odblokować";
-        else return "zablokować";
     }
 
     render() {
@@ -104,33 +69,17 @@ class UserDetails extends Component {
                 <div className={"my-5"}>
                     <Card>
                         <CardBody>
-                            <CardTitle tag="h2" className={"mb-4"}>{item.userData.name + ' ' + item.userData.surname}</CardTitle>
+                            <CardTitle tag="h2" className={"mb-4"}>{item.name}</CardTitle>
                             <CardText tag="div" className="mb-3">
                                 <ul className={"list-group"}>
-                                    <li className={"list-group-item"}>{'Nazwa użytkownika: ' + item.username}</li>
-                                    <li className={"list-group-item"}>{'E-mail: ' + item.email}</li>
-                                    {item.roles[0].id === 1 && <li className={"list-group-item"}>Rola: Użytkownik</li>}
-                                    {item.roles[0].id === 2 && <li className={"list-group-item"}>Rola: Zarządca floty</li>}
-                                    {item.roles[0].id === 3 && <li className={"list-group-item"}>Rola: Administrator</li>}
+                                    <li className={"list-group-item"}>{'Login: ' + item.login}</li>
+                                    {item.roleId === 3 && <li className={"list-group-item"}>Rola: Tester</li>}
+                                    {item.roleId === 2 && <li className={"list-group-item"}>Rola: Konfigurator</li>}
+                                    {item.roleId === 1 && <li className={"list-group-item"}>Rola: Administrator</li>}
                                 </ul>
                             </CardText>
                             <Button color="primary" tag={Link} to={"/users/edit/" + item.id}>Edytuj</Button>{' '}
-                            <Button color="warning"
-                                    onClick={() => {
-                                        if (window.confirm('Czy na pewno chcesz ' + this.getCurrentState() + ' tego użytkownika?'))
-                                        {
-                                            this.block(item.id);
-                                            this.setState({blocked: !this.state.blocked})
-                                        }
-                                    }}>
-                                {(this.state.blocked) ? "Odblokuj" : "Zablokuj"}
-                            </Button>{' '}
                             <Button color="danger" onClick={() => { if (window.confirm('Czy na pewno chcesz usunąć tego użytkownika?')) this.remove(item.id) } }>Usuń</Button>
-                            {this.state.showHideCarList &&
-                                <div className={"my-5"}>
-                                    <UsersCarList id={this.state.item.id}/>
-                                </div>
-                            }
                         </CardBody>
                     </Card>
                 </div>

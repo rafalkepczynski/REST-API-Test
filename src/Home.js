@@ -4,7 +4,7 @@ import {Link} from "react-router-dom";
 import AppNavbar from "./AppNavbar";
 import './App.css';
 import AuthService from "./services/auth.service";
-import ManagerScreen from "./ManagerScreen";
+import ConfiguratorScreen from "./ConfiguratorScreen";
 import AdminScreen from "./AdminScreen";
 import TesterScreen from "./TesterScreen";
 
@@ -36,11 +36,11 @@ class Home extends Component {
                 <AppNavbar/>
                 <Container>
                     <Jumbotron>
-                        {role === "Customer" && (
+                        {role === "Tester" && (
                             <TesterScreen/>
                         )}
                         {role === "Configurator" && (
-                            <ManagerScreen/>
+                            <ConfiguratorScreen/>
                         )}
                         {role === "Admin" && (
                             <AdminScreen/>

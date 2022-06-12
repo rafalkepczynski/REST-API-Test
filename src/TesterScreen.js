@@ -52,7 +52,7 @@ class TesterScreen extends Component {
                 <hr className="my-2" />
                 <p>Twoja rola to tester. Możesz skorzystać z widocznych poniżej funkcji systemu.</p>
                 <p className="lead">
-                    <Button color="primary" tag={Link} to={"/tests/" + currentUser.id}>Testy</Button>{' '}
+                    <Button color="primary" tag={Link} to={"/tests/"}>Testy</Button>{' '}
                     <Button color="warning" onClick={this.showHidePwdChg}>Zmień hasło</Button>
                 </p>
                 {this.state.showHidePwdChg && <PwdChgScreen/>}
